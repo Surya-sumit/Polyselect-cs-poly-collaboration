@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paper text-ink font-body antialiased;
+    background-image:
+      linear-gradient(rgba(20, 99, 86, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 99, 86, 0.045) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-ink;
+  }
+  :focus-visible {
+    outline: 2px solid #146356;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-line rounded-sm2;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-teal text-white font-display font-medium
+           px-6 py-3 rounded-sm2 hover:bg-teal-dark transition-colors duration-150;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-transparent text-teal border border-teal
+           font-display font-medium px-6 py-3 rounded-sm2 hover:bg-teal hover:text-white transition-colors duration-150;
+  }
+  .eyebrow {
+    @apply font-mono text-xs tracking-widest uppercase text-teal;
+  }
+  .field-label {
+    @apply block font-mono text-xs uppercase tracking-wide text-inkfaint mb-1.5;
+  }
+  .field-select, .field-input {
+    @apply w-full bg-white border border-line rounded-sm2 px-3 py-2.5 text-sm text-ink
+           focus:border-teal focus:ring-1 focus:ring-teal outline-none transition-colors;
+  }
+}

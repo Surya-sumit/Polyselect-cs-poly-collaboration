@@ -1,160 +1,161 @@
-# PolySelect — Polymer Material Selection Expert System
+# PolySelect
+**A decision-support expert system for polymer material selection.**
 
-A decision-support web app that helps PPE students, product designers, and small
-manufacturers choose a polymer for a product — filtered by hard constraints,
-ranked by weighted scoring, and explained at every step. Not a chatbot: every
-score traces back to a documented formula in `backend/app/recommender.py`.
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi) ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 
+## Demo
+![PolySelect Demo Placeholder](docs/images/demo.gif)
+
+## About
+PolySelect is a material selection engine designed for PPE students, product designers, and small manufacturers. Instead of relying on guesswork, it filters polymers based on hard constraints like temperature or food safety, scores them against soft preferences, and ranks them logically. Every recommendation is fully explained so you know exactly why one material beat another.
+
+## Features
+- **Hard-Constraint Filtering**: Immediately rejects materials that fail non-negotiable physical constraints.
+- **Weighted Scoring**: Evaluates surviving materials on 7 factors like Strength, Temperature, Cost, and Sustainability.
+- **Detailed Explanations**: Generates a checklist of reasons for recommendations and explains why alternatives were rejected.
+- **Comparison Tool**: Compares up to 3 materials side-by-side using radar charts and tables.
+- **Cost Estimator**: Calculates raw material cost based on expected product weight and quantity.
+- **Process Recommendation**: Suggests manufacturing methods (e.g., Injection Molding, Extrusion) based on the material and product shape.
+- **What-If Simulator**: Diff tool to see how changes in requirements affect the material rankings.
+
+## How It Works
+
+```mermaid
+flowchart TD
+    A[User Requirements] --> B[Hard Constraints Filter]
+    B -->|Rejected| C[Why Not Explanations]
+    B -->|Survivors| D[Weighted Soft-Scoring]
+    D --> E[Ranking & Sorting]
+    E --> F[Top Recommendations]
+    E --> G[Score Factor Breakdown]
 ```
-Product Requirements → Hard-Constraint Filter → Weighted Scoring → Ranking
-→ Recommendation → Explanation → Manufacturing Process → Cost → Comparison
+The engine evaluates user inputs through two phases. First, it applies hard constraints (e.g., max operating temperature) to reject unsuitable choices. Then, it uses a weighted formula to score surviving materials out of 100 on traits like flexibility and cost, finally ranking them and producing automated explanations.
+
+## System Architecture
+
+```mermaid
+flowchart LR
+    subgraph Frontend [React + Vite]
+        UI[User Interface] --> API_JS[api.js wrapper]
+    end
+    subgraph Backend [FastAPI]
+        API[main.py Endpoints] --> REC[recommender.py Engine]
+        API --> DB_CONT[database.py]
+    end
+    subgraph Database
+        SQLITE[(SQLite polyselect.db)]
+    end
+    API_JS <-->|REST API| API
+    DB_CONT <-->|SQLAlchemy ORM| SQLITE
+    REC <-->|Models| DB_CONT
 ```
 
----
+## Tech Stack
 
-## 1. How it actually works
-
-### Backend — FastAPI + SQLAlchemy (`backend/`)
-
-```
-backend/
-  app/
-    database.py      SQLite by default; swap in Postgres/MySQL via .env DATABASE_URL
-    models.py         Material ORM model — every property PolySelect scores against
-    schemas.py         Pydantic request/response shapes
-    seed_data.py        14 polymers (PET, PETG, HDPE, LDPE, PP, PVC, PS, ABS,
-                          PLA, PA6, PC, PMMA, POM, TPU) with engineering-approximate
-                          property values, seeded automatically on first run
-    recommender.py       THE CORE ENGINE — kept separate from the API routes so
-                           it can be tested independently (see §2 below)
-    main.py                 REST routes that call into the engine
-```
-
-**Endpoints:**
-
-| Route | What it does |
+| Layer | Technologies |
 |---|---|
-| `GET /materials` | List all materials (summary) |
-| `GET /materials/{id}` | Full property profile — powers the "Learn More" page |
-| `POST /recommend` | Requirements in → ranked, scored, explained materials out |
-| `POST /compare` | Side-by-side properties for 2–3 chosen materials |
-| `POST /cost` | Raw material cost estimate from weight × quantity × price/kg |
-| `POST /process` | Manufacturing process suggestion + reasoning |
-| `POST /what-if` | Runs `/recommend` twice (before/after) and diffs the ranking |
+| **Frontend** | React 19, Vite 8, Tailwind CSS, React Router, Recharts, Framer Motion |
+| **Backend** | Python, FastAPI, Uvicorn, Pydantic |
+| **Database** | SQLite, SQLAlchemy ORM |
 
-Interactive API docs live at `http://localhost:8000/docs` once the server is running.
+## Results & Accuracy
 
-### Frontend — React + Vite + Tailwind (`frontend/`)
+| Metric | Value |
+|---|---|
+| Accuracy | [ADD VALUE] |
+| Precision | [ADD VALUE] |
+| Recall | [ADD VALUE] |
+| FPS | [ADD VALUE] |
+| Dataset Size | 14 Polymers (Seed Data) |
+| Test Setup | [ADD VALUE] |
 
+## Screenshots
+![Selection Interface](docs/images/selection_form.png)
+*Entering requirements in the primary material selection form.*
+
+![Results & Recommendations](docs/images/results_rankings.png)
+*Detailed ranking with the custom "spec ticket" material card and radar chart breakdown.*
+
+![Material Comparison](docs/images/compare_radar.png)
+*Comparing multiple materials side-by-side using the Compare tool.*
+
+## Project Structure
+
+```text
+/
+├── backend/            # FastAPI backend and SQLite database
+│   ├── app/            # Application logic, models, schemas, recommender engine
+│   └── requirements.txt# Backend Python dependencies
+├── frontend/           # React frontend application
+│   ├── public/         # Static assets
+│   ├── src/            # React components, pages, context, and API wrapper
+│   ├── package.json    # Frontend Node.js dependencies
+│   └── tailwind.config.js # Tailwind styling rules
+└── README.md           # This project overview
 ```
-frontend/src/
-  api.js                Thin fetch wrapper around the backend
-  context/AppContext.jsx  Holds the last requirements + recommendation in memory
-                            so Selection → Results → Cost/What-If can share state
-  components/            NavBar, Footer, ScoreBar, MaterialCard ("spec ticket"), Loader
-  pages/
-    Home.jsx               Landing page + pipeline explainer
-    Selection.jsx            The requirements form (Step 1)
-    Results.jsx                Ranked recommendation + why / why-not (Step 2)
-    Materials.jsx                Browse all 14 polymers
-    MaterialDetail.jsx             Full learning profile per material
-    Compare.jsx                     Radar chart + table, 2–3 materials
-    CostEstimator.jsx                 Cost calculator + cross-material comparison
-    WhatIf.jsx                         Before/after simulator (Step 3)
-    About.jsx                           Explains the hard-constraint/soft-preference philosophy
-```
 
-## 2. How the recommendation engine works (`recommender.py`)
+## Installation
 
-**Step 1 — Hard constraints.** A material is rejected outright, before any
-scoring happens, if it fails something non-negotiable:
-- Its max safe operating temperature is below what you specified
-- You need food contact and it isn't food-contact approved
-- You marked chemical resistance / transparency / UV resistance / sustainability
-  as **Required** and the material falls below the minimum threshold
+### Prerequisites
+- Python 3.9+
+- Node.js 18+
 
-Rejected materials are still shown to you — with the exact reason — in the
-"Why Not the Others?" section of the Results page.
-
-**Step 2 — Weighted soft-preference scoring.** Every material that survives
-gets scored 0–100 across seven factors (Strength, Temperature, Chemical
-Resistance, Cost, Flexibility, Transparency, Sustainability). Each factor has
-a default weight (matching the project spec's example: 25/20/15/15/10/5/10)
-that you can override via the "Advanced: Adjust Scoring Weights" panel on the
-Selection page. Each factor's contribution is a documented formula — e.g.
-Temperature rewards a *safety margin* above your stated requirement rather
-than just a pass/fail; Cost is scored relative to your chosen budget band;
-Flexibility scores *closeness* to your requested level rather than "more is
-always better." Full formulas are commented in the code.
-
-**Step 3 — Rank & explain.** Materials are sorted by total score. The top
-pick and every alternative get a "why" checklist generated from which
-factors it scored well on, plus a full points-per-factor breakdown you can
-see as bar charts on the Results page.
-
-**What-If** simply runs this whole pipeline twice — once for your "before"
-requirements, once for "after" — and diffs the resulting rankings to show
-you exactly which materials moved and why. Nothing about it is hard-coded;
-it's the same engine, called twice.
-
-## 3. Design
-
-Minimal, engineering-datasheet aesthetic: a soft paper background with a
-faint drafting grid, Space Grotesk for headings, IBM Plex Sans for body
-text, and IBM Plex Mono for all data/scores/specs (so numbers always read
-like measurements, not just text). The signature visual is the "spec
-ticket" card — every recommended material renders like a lab specimen tag,
-with a die-cut corner notch, a perforated divider, and a monospace
-match-percentage readout. Fully responsive down to mobile.
-
----
-
-## 4. Running it locally (Windows / PowerShell)
-
-### Backend
+### Commands (Windows PowerShell)
 
 ```powershell
+# 1. Clone the repository and setup the backend
 cd polyselect\backend
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
+
+# 2. Setup the frontend in a new terminal window
+cd ..\frontend
+npm install
+
+# 3. Environment Variable Setup (Optional)
+# The backend defaults to SQLite, but you can set DATABASE_URL in backend/.env for Postgres/MySQL.
+# The frontend connects to http://localhost:8000 via VITE_API_URL in frontend/.env.
+```
+
+## Usage
+
+### 1. Start the Backend API
+```powershell
+cd polyselect\backend
+venv\Scripts\activate
 uvicorn app.main:app --reload
 ```
+*The API will be available at `http://localhost:8000`. API Docs: `http://localhost:8000/docs`.*
 
-The API starts at `http://127.0.0.1:8000` and seeds its own SQLite database
-(`polyselect.db`) on first run — nothing else to configure. Swap in
-Postgres/MySQL later by creating a `.env` file with `DATABASE_URL=...`.
-
-### Frontend
-
-Open a **second** PowerShell window:
-
+### 2. Start the Frontend
+Open a new PowerShell window:
 ```powershell
 cd polyselect\frontend
-npm install
 npm run dev
 ```
+*The UI will be accessible at `http://localhost:5173`.*
 
-Open `http://localhost:5173`. It talks to the backend via `VITE_API_URL`,
-already set to `http://localhost:8000` in `frontend/.env`.
+## API Endpoints
 
-### Quick smoke test
+| Method | Route | Auth | Purpose |
+|---|---|---|---|
+| GET | `/materials` | None | List all materials (summary) |
+| GET | `/materials/{id}` | None | Get full detail profile for one material |
+| POST | `/recommend` | None | Hard-filter, weighted-score, and rank materials |
+| POST | `/compare` | None | Compare properties for selected materials |
+| POST | `/cost` | None | Estimate cost for manufacturing part |
+| POST | `/process` | None | Suggest manufacturing process and provide alternatives |
+| POST | `/what-if` | None | Simulate before/after requirements and provide diff |
 
-With the backend running, visit `http://127.0.0.1:8000/docs` — you should
-see 14 materials come back from `GET /materials` and a ranked list from
-`POST /recommend`.
+## Limitations and Future Work
+- **Static Dataset**: Currently limited to 14 standard materials seeded at startup.
+- **Cost Fluctuations**: The cost model uses static median price estimates rather than real-time API integrations.
+- **Future Module**: An Admin CRUD panel for adding/editing new materials.
+- **Future Module**: Student quizzes/evaluations tied to the decision engine.
+- **Security Check**: CORS is currently set to `allow_origins=["*"]` which must be restricted ahead of production.
 
----
-
-## 5. What's implemented vs. what's next
-
-**Implemented:** material database (14 polymers), hard-constraint filter,
-weighted scoring engine, ranked recommendations with explanations, why-not
-reasoning, material comparison (table + radar chart), cost estimator,
-manufacturing process recommendation, and the What-If simulator.
-
-**Natural next additions** (not built yet, but the architecture supports
-them cleanly): an admin panel for CRUD on materials (the `Material` model
-and `/materials` routes are already structured for it), a student quiz
-module, and swapping SQLite for Postgres for multi-user deployment
-(one env var change, see `database.py`).
+## Contributors, License, Contact
+- **Contributors**: [ADD VALUE]
+- **License**: [ADD VALUE]
+- **Contact**: [ADD VALUE]
